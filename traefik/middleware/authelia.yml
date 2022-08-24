@@ -1,0 +1,9 @@
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: authelia
+  namespace: default
+spec:
+  forwardAuth:
+    address: "http://authelia:9091/api/verify?rd=https://auth.thewestgate.org"

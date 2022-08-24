@@ -1,0 +1,7 @@
+---
+- name: Deploy nginx
+  hosts: localhost
+  connection: local
+  become: yes
+  tasks:
+  - shell: kubectl apply -f /etc/ansible/deployments/nginx.yml

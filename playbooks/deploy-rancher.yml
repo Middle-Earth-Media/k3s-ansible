@@ -1,0 +1,23 @@
+---
+- name: Deploy Rancher
+  hosts: localhost
+  connection: local
+  become: yes
+  tasks:
+  - name: Create cattle-system namespace in k8s
+    k8s:
+      kubeconfig: /etc/ansible/config/k3s.yaml
+      api_version: v1
+      kind: Namespace
+      name: cattle-system
+      state: present
+  - name: Install Rancher
+    shell: |
+      helm repo add rancher-stable https://releases.rancher.com/server-charts/stable
+      helm repo update
+      helm fetch rancher-stable/rancher --version=2.6.5
+      helm install rancher rancher-stable/rancher \
+      --namespace cattle-system \
+      --set hostname=rancher.local.thewestgate.org \
+      --set replicas=3
+      kubectl patch svc rancher -n cattle-system -p '{"spec": {"loadBalancerIP": "192.168.0.211", "type": "LoadBalancer"}}'

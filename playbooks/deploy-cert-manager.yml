@@ -1,0 +1,19 @@
+---
+- name: Deploy Cert-Manager
+  hosts: localhost
+  connection: local
+  become: yes
+  tasks:
+  - name: Create cert-manager namespace in k8s
+    k8s:
+      kubeconfig: /etc/ansible/config/k3s.yaml
+      api_version: v1
+      kind: Namespace
+      name: cert-manager
+      state: present
+  - name: Install Cert-Manager
+    shell: |
+      kubectl apply -f /etc/ansible/deployments/cert-manager-1.9.1-crds.yaml
+      helm install cert-manager jetstack/cert-manager \
+      --namespace cert-manager \
+      --version v1.9.1

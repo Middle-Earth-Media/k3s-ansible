@@ -1,0 +1,11 @@
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: secured
+  namespace: default
+spec:
+  chain:
+    middlewares:
+    - default-whitelist
+    - default-headers

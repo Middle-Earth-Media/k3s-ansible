@@ -1,0 +1,64 @@
+---
+- name: Go
+  hosts: localhost
+  connection: local
+  become: yes
+  vars:
+    rancher_hostname: rancher.local.thewestgate.org
+    # new password
+    pwd: P@ssingwords77!$
+
+  tasks:
+    - name: Reset admin pwd
+      shell: |
+        kubectl -n cattle-system \
+        exec $(kubectl -n cattle-system get pods -l \
+        app=rancher | grep '1/1' | head -1 | awk '{ \
+        print $1 }') -- reset-password | tail -n 1 
+      register: reset_pwd
+
+    - name: Store the new admin pwd
+      set_fact:
+        initial_pwd: "{{ reset_pwd.stdout }}"
+
+    - name: Print the new admin pwd
+      debug:
+        msg: "New (random) admin pwd: {{ initial_pwd }}"
+        verbosity: 2
+
+    - name: Authenticate
+      uri:
+        url: "https://{{ rancher_hostname }}/v3-public/localProviders/local?action=login"
+        method: POST
+        body_format: json
+        body:
+          username: admin
+          password: "{{ initial_pwd }}"
+        validate_certs: no
+        status_code: 201
+        return_content: yes
+      ignore_errors: yes
+      register: login_response
+
+    - name: Store auth token
+      set_fact:
+        token: "{{ login_response.json.token }}"
+      when: login_response is succeeded
+
+    - name: Print auth token
+      debug:
+        msg: "Auth token: {{ token }}"
+        verbosity: 2
+
+    - name: Set admin password
+      uri:
+        url: "https://{{ rancher_hostname }}/v3/users?action=changepassword"
+        headers:
+          Authorization: Bearer {{ token }}
+        method: POST
+        body_format: json
+        body:
+          currentPassword: "{{ initial_pwd }}"
+          newPassword: "{{ pwd }}"
+        validate_certs: no
+        status_code: 200

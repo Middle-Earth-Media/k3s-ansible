@@ -1,0 +1,14 @@
+---
+- name: Get initial Argo CD password for Admin
+  hosts: localhost
+  connection: local
+  become: yes
+  tasks:
+  - shell: kubectl get secret argocd-initial-admin-secret -n argocd -o yaml
+    register: password
+  - set_fact:
+      my_var: "{{ password.stdout_lines[2] | regex_replace('.*password: (.*).*', '\\1') }}"
+  - shell: echo {{ my_var }} | base64 --decode
+    register: decoded_pass
+  - debug:
+      var: decoded_pass.stdout

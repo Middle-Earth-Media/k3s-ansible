@@ -1,0 +1,17 @@
+---
+- name: Deploy Argo CD
+  hosts: localhost
+  connection: local
+  become: yes
+  tasks:
+  - name: Create argocd namespace in k8s
+    k8s:
+      kubeconfig: /etc/ansible/config/k3s.yaml
+      api_version: v1
+      kind: Namespace
+      name: argocd
+      state: present
+  - name: Install argocd
+    shell: |
+      kubectl apply -n argocd -f /etc/ansible/deployments/argocd-install.yml
+      kubectl patch svc argocd-server -n argocd -p '{"spec": {"loadBalancerIP": "192.168.0.212", "type": "LoadBalancer"}}'

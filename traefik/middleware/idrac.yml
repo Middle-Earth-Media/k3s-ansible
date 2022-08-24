@@ -1,0 +1,16 @@
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: idrac
+  namespace: default
+spec:
+  headers:
+    frameDeny: true
+    browserXssFilter: true
+    forceSTSHeader: true
+    stsIncludeSubdomains: true
+    stsSeconds: 15552000
+    customFrameOptionsValue: SAMEORIGIN
+    customRequestHeaders:
+      X-Forwarded-Proto: https

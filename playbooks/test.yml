@@ -1,0 +1,67 @@
+---
+- name: Deploy Vault
+  hosts: localhost
+  connection: local
+  become: yes
+  tasks:
+  - name: Create vault namespace in k8s
+    k8s:
+      kubeconfig: /etc/ansible/config/k3s.yaml
+      api_version: v1
+      kind: Namespace
+      name: vault
+      state: present
+  - name: Add helm repo
+    shell: |
+      helm repo add hashicorp https://helm.releases.hashicorp.com
+      helm repo update
+
+
+
+
+
+  - name: Install the latest version of the Vault Helm chart running in development mode with the injector service disabled and CSI enabled.
+    shell: |
+      helm install vault hashicorp/vault \
+      --set "server.ha.enabled=true" \
+      --set "server.ha.replicas=3" \
+      --set "csi.enabled=true"
+
+
+
+
+  #- name: Find latest version of consul - backend storage for vault
+  #  shell: helm search repo hashicorp/consul --versions
+  #  register: versions
+  #- name: Create manifests directory if not present
+  #  file:
+  #    path: /etc/ansible/vault2022/manifests
+  #    state: directory
+  #    owner: root
+  #    group: root
+  #    mode: 0644
+  #- name: Create consul namespace in k8s
+  #  k8s:
+  #    kubeconfig: /etc/ansible/config/k3s.yaml
+  #    api_version: v1
+  #    kind: Namespace
+  #    name: consul
+  #    state: present
+  #- name:
+  #  shell: |
+  #    helm template consul hashicorp/consul \
+  #    --namespace consul \
+  #    --version {{ versions.stdout[104:110] }} \
+  #    -f /etc/ansible/vault2022/manifests/consul-values.yml \
+  #    > /etc/ansible/vault2022/manifests/consul.yml
+  #- debug:
+  #    var: versions.stdout[104:110]
+  #- name: Create vault namespace in k8s
+  #  k8s:
+  #    kubeconfig: /etc/ansible/config/k3s.yaml
+  #    api_version: v1
+  #    kind: Namespace
+  #    name: vault
+  #    state: present
+  #- name: Apply consul manifest
+  #  shell: kubectl -n consul apply -f /etc/ansible/vault2022/manifests/consul.yml

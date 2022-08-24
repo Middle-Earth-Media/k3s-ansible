@@ -1,0 +1,9 @@
+---
+- name: Remove Argo CD
+  hosts: localhost
+  connection: local
+  become: yes
+  tasks:
+  - shell: |
+      kubectl delete -n argocd -f /etc/ansible/deployments/argocd-install.yml
+      kubectl delete -f /etc/ansible/deployments/argocd-namespace.yml
